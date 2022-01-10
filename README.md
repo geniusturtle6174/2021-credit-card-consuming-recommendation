@@ -72,7 +72,7 @@ python3 test_cv_merge_allow_shorter.py n_fold_train
 
 #### 時間不變類
 
-對於每人僅使用取值範圍內最後消費當月（N<sub>1</sub> 範圍內的最後一筆）的金額最大的類別所記載的資料來組成特徵。
+對於每位客戶，僅使用取值範圍內最後消費當月（N<sub>1</sub> 範圍內的最後一筆）的金額最大的類別所記載的資料來組成特徵。
 
 使用時，以 masts, gender_code, age, primary_card, slam 各自編成 one-hot encoding 或數值型態後組合，共得 20 維，細節說明如下
 * masts: 含缺值共 4 種狀態，4 維。

@@ -44,7 +44,7 @@ python3 test_cv_merge_allow_shorter.py n_fold_train
 
 ## 作法分享
 
-以下將介紹本競賽所使用的特徵截取、模型設計與訓練，以及執行環境，最後亦將簡單介紹幾個我認為在一路上做過的實驗中，可能比較重要的那些，以稍微表示我選擇參數時的決策原因，若有不同發現亦歡迎討論指教。
+以下將介紹本競賽所使用的執行環境、特徵截取、模型設計與訓練。
 
 ### 執行環境
 
@@ -64,13 +64,36 @@ python3 test_cv_merge_allow_shorter.py n_fold_train
 1. 排序出消費金額前 n 大者，最佳成績中使用的 n 為 13。根據觀察，約 99% 的人，其每月消費類別數在 13 以下。
 2. 取該月時間特徵，為待預測月減去該月，共 1 維。
 3. 該月類別特徵共 49 維，若該月該類別消費金額在該月前 n 名中且金額大於 0 者，其特徵值由名次大到小依次為 n, n-1, n-2, …, 1；前 n 名以外或金額小於等於 0 的類別，其特徵值為 0。
-4. 對於前 n 名的每個類別，無論其消費金額皆取以下特徵，共 22 維：txn_cnt, txn_amt, domestic_offline_cnt, domestic_online_cnt, overseas_offline_cnt, overseas_online_cnt, domestic_offline_amt_pct, domestic_online_amt_pct, overseas_offline_amt_pct, overseas_online_amt_pct, card_*_txn_cnt (* = 1, 2, 4, 6, 10, other), card_*_txn_amt_pct (* = 1, 2, 4, 6, 10, other)。
+4. 對於前 n 名的每個類別，無論其消費金額皆取以下特徵，共 22 維：txn\_cnt, txn\_amt, domestic\_offline\_cnt, domestic\_online\_cnt, overseas\_offline\_cnt, overseas\_online\_cnt, domestic\_offline\_amt\_pct, domestic\_online\_amt\_pct, overseas\_offline\_amt\_pct, overseas\_online\_amt\_pct, card\_\*\_txn\_cnt (* = 1, 2, 4, 6, 10, other), card\_\*\_txn\_amt\_pct (\* = 1, 2, 4, 6, 10, other)。
    * 1, 2, 4, 6, 10, other 為所有消費紀錄中，使用次數最多的前六個卡片編號。
-5. 以上共 1 + 49 + 13 * 22 = 336 維
+5. 以上共 1 + 49 + 13 \* 22 = 336 維
 
-跨月份的取值方式如下圖所示，其中 N_1 為 20 個月，N_2 為 4 組，在範圍內會盡可能的取長或多。另，若該月未有消費紀錄，則忽略該月。
+跨月份的取值方式如下圖所示，其中 $N_1$ 為 20 個月，$N_2$ 為 4 組，在範圍內會盡可能的取長或多。另，若該月未有消費紀錄，則忽略該月。
 
-![時間變化類取值方式][images/fea_ext.png "時間變化類取值方式"]
+![時間變化類取值方式](images/fea_ext.png "時間變化類取值方式")
 
 #### 時間不變類
 
+對於每人僅使用取值範圍內最後消費當月（$N_1$ 範圍內的最後一筆）的金額最大的類別所記載的資料來組成特徵。
+
+使用時，以 masts, gender_code, age, primary_card, slam 各自編成 one-hot encoding 或數值型態後組合，共得 20 維，細節說明如下
+* masts: 含缺值共 4 種狀態，4 維。
+* gender\_code: 含缺值共 3 種狀態，3 維。
+* age: 含缺值共 10 種狀態，10 維。
+* primary\_card: 沒有缺值，共 2 種狀態，2 維。
+* slam: 數值型態，取 log 後做為特徵，1 維。
+
+此部分亦嘗試過其他特徵，但可能是因為維度較大不易訓練（如 cuorg，含缺值共 35 維），或客戶有可能填寫不實（如 poscd），故未取得較好之結果。
+
+### 模型設計與訓練
+
+本次比賽使用的模型架構如下圖，主體為 BiLSTM + attention，前後加上適量的 linear layers，其中標色部分為 attention 的做用範圍，最後面的 dense layers 之細部架構則為 (dense 128 + ReLU + dropout 0.1) * 2 + dense 16 + Sigmoid。模型輸出為下月金額第一名者為 1，第二名者 0.8，第三名者 0.6，第四名以下有購買者 0.2，未購買者 0。
+
+![模型架構](images/model.png "模型架構")
+
+訓練方式為 5 folds cross validation，預測時會將五個模型的結果取平均，再依據平均後的排名輸出前三名的類別。細節參數如下，未提及之參數係依照 pytorch 預設值，未進行修改：
+* Num of epochs: 100 epochs，若 validation loss 連續 10 個 epochs 未創新低，則提前終止該 fold 的訓練。
+* Batch size: 512。
+* Loss: MSE。
+* Optimizer: ADAM with learning rate 0.01。
+* Learning rate scheduler: 每個 epoch 下降為上一次的 0.95 倍，直至其低於 0.0001 為止。

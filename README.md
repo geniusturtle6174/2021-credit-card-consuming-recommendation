@@ -62,7 +62,7 @@ python3 test_cv_merge_allow_shorter.py n_fold_train
 1. 排序出消費金額前 n 大者，最佳成績中使用的 n 為 13。根據觀察，約 99% 的人，其每月消費類別數在 13 以下。
 2. 取該月時間特徵，為待預測月減去該月，共 1 維。
 3. 該月類別特徵共 49 維，若該月該類別消費金額在該月前 n 名中且金額大於 0 者，其特徵值由名次大到小依次為 n, n-1, n-2, …, 1；前 n 名以外或金額小於等於 0 的類別，其特徵值為 0。
-4. 對於前 n 名的每個類別，無論其消費金額皆取以下特徵，共 22 維：txn\_cnt, txn\_amt, domestic\_offline\_cnt, domestic\_online\_cnt, overseas\_offline\_cnt, overseas\_online\_cnt, domestic\_offline\_amt\_pct, domestic\_online\_amt\_pct, overseas\_offline\_amt\_pct, overseas\_online\_amt\_pct, card\_\*\_txn\_cnt (* = 1, 2, 4, 6, 10, other), card\_\*\_txn\_amt\_pct (\* = 1, 2, 4, 6, 10, other)。
+4. 對於前 n 名的每個類別，無論其消費金額皆取以下特徵，共 22 維：txn\_cnt, txn\_amt (取 log), domestic\_offline\_cnt, domestic\_online\_cnt, overseas\_offline\_cnt, overseas\_online\_cnt, domestic\_offline\_amt\_pct, domestic\_online\_amt\_pct, overseas\_offline\_amt\_pct, overseas\_online\_amt\_pct, card\_\*\_txn\_cnt (* = 1, 2, 4, 6, 10, other), card\_\*\_txn\_amt\_pct (\* = 1, 2, 4, 6, 10, other)。
    * 1, 2, 4, 6, 10, other 為所有消費紀錄中，使用次數最多的前六個卡片編號。
 5. 以上共 1 + 49 + 13 \* 22 = 336 維
 
@@ -72,7 +72,7 @@ python3 test_cv_merge_allow_shorter.py n_fold_train
 
 #### 時間不變類
 
-對於每位客戶，僅使用取值範圍內最後消費當月（N<sub>1</sub> 範圍內的最後一筆）的金額最大的類別所記載的資料來組成特徵。
+對於每位客戶，僅使用取特徵值範圍內最後消費當月（N<sub>1</sub> 範圍內的最後一筆）的金額最大的類別所記載的資料來組成特徵。
 
 使用時，以 masts, gender_code, age, primary_card, slam 各自編成 one-hot encoding 或數值型態後組合，共得 20 維，細節說明如下
 * masts: 含缺值共 4 種狀態，4 維。
@@ -81,7 +81,7 @@ python3 test_cv_merge_allow_shorter.py n_fold_train
 * primary\_card: 沒有缺值，共 2 種狀態，2 維。
 * slam: 數值型態，取 log 後做為特徵，1 維。
 
-此部分亦嘗試過其他特徵，但可能是因為維度較大不易訓練（如 cuorg，含缺值共 35 維），或客戶有可能填寫不實（如 poscd），故未取得較好之結果。
+此部分亦嘗試過加入其他欄位，但可能是因為組成特徵的維度較大不易訓練（如 cuorg，含缺值共 35 維），或客戶有可能填寫不實（如 poscd），故未取得較好之結果。我亦嘗試過加入範圍內最初消費當月（N<sub>1</sub> 範圍內的第一筆），來一起做為 BiLSTM 的 initial states，但也未取得較好之結果。
 
 #### 預測目標
 
@@ -89,7 +89,8 @@ python3 test_cv_merge_allow_shorter.py n_fold_train
 
 #### 小結
 
-以上取法經去除輸出全部為 0 （即預測目標月份沒有購買行為）之資料後，共約 102 萬組。
+* txn\_amt 和 slam 是經過官方神秘轉換後的結果，其值非常大，所以我取了 log。官方 slack 頻道中有人提出部分值為負(後續官方說明為負值表示退貨)，而負數取 log 後應該會讓模型爛掉，但也許是資料分佈剛好讓這種狀況掉出該人該月的購買金額 13 名外，因此我沒有碰到相關問題，所以也沒有做特別處理。
+* 以上取法經去除輸出全部為 0，即預測目標月份沒有購買行為之資料後，共約 102 萬組；每種長度的資料數量則沒有做統計觀察。
 
 ### 模型設計與訓練
 

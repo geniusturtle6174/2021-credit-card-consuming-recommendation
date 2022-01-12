@@ -3,8 +3,8 @@ import pickle
 
 import numpy as np
 import torch
-import yaml
 import torch.nn.utils.rnn as rnn_utils
+import yaml
 from torch.utils.data import Dataset
 
 TARGET_TAGS = np.array([2, 6, 10, 12, 13, 15, 18, 19, 21, 22, 25, 26, 36, 37, 39, 48])
@@ -79,12 +79,12 @@ FEA_NAME_TO_IDX = {
 
 
 def save_pkl(path, pkl):
-    with open(path, 'wb') as handle:   
+    with open(path, 'wb') as handle:
         pickle.dump(pkl, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def load_pkl(path):
-    with open(path, 'rb') as handle:   
+    with open(path, 'rb') as handle:
         return pickle.load(handle)
 
 
@@ -216,7 +216,7 @@ def one_dt_all_tags_to_tag_fea(dt_data, this_dt, base_dt, TOP_N=13):
             ret_fea += one_dt_one_tag_to_fea(None)
     # # # Answer for this month, DIM = 16
     # ret_fea += one_dt_all_tags_to_ans(dt_data, ret_as_nparr=False)
-    # Return 
+    # Return
     return ret_fea, top_n_tags
 
 
@@ -233,7 +233,7 @@ def one_dt_all_tags_to_common_fea(dt_data, top_n_tags):
     ret_fea += get_one_hot_fea(common_std[FEA_NAME_TO_IDX['age']], ONE_HOT_MAPS['age']) # DIM = 10
     ret_fea += get_one_hot_fea(common_std[FEA_NAME_TO_IDX['primary_card']], ONE_HOT_MAPS['primary_card']) # DIM = 2
     ret_fea += [common_std[FEA_NAME_TO_IDX['slam']]]
-    # Return 
+    # Return
     return np.array(ret_fea)
 
 

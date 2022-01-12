@@ -1,7 +1,6 @@
-import os
-import json
-import time
 import argparse
+import os
+import time
 import warnings
 
 import numpy as np
@@ -9,7 +8,8 @@ import torch
 from torch import nn, optim
 from torch.autograd import Variable
 
-import util, model_allow_shorter
+import model_allow_shorter
+import util
 
 np.set_printoptions(linewidth=150)
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -34,7 +34,7 @@ for key in range(1, 25):
     print('\tFinished, shapes:', fea_tag_one_len.shape, fea_com_last_one_len.shape, ans_one_len.shape)
     print('\tRemoving zeros...')
     ans_sum = np.sum(ans_one_len, axis=1)
-    keep_idx = np.where(ans_sum>0)[0]
+    keep_idx = np.where(ans_sum > 0)[0]
     ans_one_len = ans_one_len[keep_idx]
     fea_com_last_one_len = fea_com_last_one_len[keep_idx]
     fea_tag_one_len = fea_tag_one_len[keep_idx]
@@ -83,8 +83,8 @@ data_num = fea_tag_all.shape[0]
 for fold in range(args.n_fold):
     best_va_loss = 9999
 
-    valid_idx = np.where(np.arange(data_num)%args.n_fold==fold)[0]
-    train_idx = np.where(np.arange(data_num)%args.n_fold!=fold)[0]
+    valid_idx = np.where(np.arange(data_num) % args.n_fold == fold)[0]
+    train_idx = np.where(np.arange(data_num) % args.n_fold != fold)[0]
 
     print('Fold {}, train num {}, test num {}'.format(
         fold, len(train_idx), len(valid_idx),

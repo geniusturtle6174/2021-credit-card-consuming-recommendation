@@ -1,13 +1,13 @@
-import os
-import json
-import time
 import argparse
+import os
+import time
 
-import torch
 import numpy as np
+import torch
 from torch.autograd import Variable
 
-import util, model_allow_shorter
+import model_allow_shorter
+import util
 
 np.set_printoptions(linewidth=150)
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')

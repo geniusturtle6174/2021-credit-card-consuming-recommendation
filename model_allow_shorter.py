@@ -1,5 +1,4 @@
 import torch
-import torch.nn.functional as F
 import torch.nn.utils.rnn as rnn_utils
 from torch import nn
 
@@ -72,8 +71,8 @@ class BILSTM_MH_ATTN(nn.Module):
         pad_attn_4, _ = rnn_utils.pad_packed_sequence(attn_4, batch_first=True)
         pad_htag, _ = rnn_utils.pad_packed_sequence(h_tag, batch_first=True)
         attn_mask = pad_attn_1 ** 2
-        attn_mask[attn_mask<=0] = float('-inf')
-        attn_mask[attn_mask>0] = 0
+        attn_mask[attn_mask <= 0] = float('-inf')
+        attn_mask[attn_mask > 0] = 0
         pad_attn_1 = self.softmax_1(pad_attn_1 + attn_mask)
         pad_attn_2 = self.softmax_2(pad_attn_2 + attn_mask)
         pad_attn_3 = self.softmax_3(pad_attn_3 + attn_mask)

@@ -34,7 +34,7 @@ python3 train_cv_allow_shorter.py -s save_model_dir
 python3 test_cv_raw_allow_shorter.py model_dir max_len
 ```
 * `model_dir`: directory of the trained model.
-* `max_len`: max number of month considered for each customer.
+* `max_len`: max number of months considered for each customer.
 
 #### Merge model outputs
 ```bash
@@ -66,7 +66,7 @@ python3 test_cv_merge_allow_shorter.py n_fold_train
    * 1, 2, 4, 6, 10, other 為所有消費紀錄中，使用次數最多的前六個卡片編號。
 5. 以上共 1 + 49 + 13 \* 22 = 336 維
 
-跨月份的取值方式如下圖所示，其中每個圓角方塊代表每人的一個月份的所有消費紀錄，而 N<sub>1</sub> 為 20 個月，N<sub>2</sub> 為 4 組，在範圍內會盡可能的取長或多。另，若該月未有消費紀錄，則忽略該月。
+跨月份的取值方式如下圖所示，其中每個圓角方塊代表每人的一個月份的所有消費紀錄，而 N<sub>1</sub> (`pkl_to_fea_allow_shorter.py` 中的 `-len`)為 20 個月，N<sub>2</sub> (`pkl_to_fea_allow_shorter.py` 中的 `-max`)為 4 組，在範圍內會盡可能的取長或多。另，若該月未有消費紀錄，則忽略該月。
 
 ![時間變化類取值方式](images/fea_ext.png "時間變化類取值方式")
 
@@ -87,9 +87,9 @@ python3 test_cv_merge_allow_shorter.py n_fold_train
 
 共 16 維，代表需要預測的 16 個類別，其中下月金額第一名者為 1，第二名者 0.8，第三名者 0.6，第四名以下有購買者 0.2，未購買者 0。
 
-#### 小結
+#### 其他說明
 
-* txn\_amt 和 slam 是經過官方神秘轉換後的結果，其值非常大，所以我取了 log。官方 slack 頻道中有人提出部分值為負(後續官方說明為負值表示退貨)，而負數取 log 後應該會讓模型爛掉，但也許是資料分佈剛好讓這種狀況掉出該人該月的購買金額 13 名外，因此我沒有碰到相關問題，所以也沒有做特別處理。
+* txn\_amt 和 slam 是經過官方神秘轉換後的結果，其值非常大，但是我發現取了 log 看起來會正常一些，所以我在組成特徵時把它們取了 log。
 * 以上取法經去除輸出全部為 0，即預測目標月份沒有購買行為之資料後，共約 102 萬組；每種長度的資料數量則沒有做統計觀察。
 
 ### 模型設計與訓練
